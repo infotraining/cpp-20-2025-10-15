@@ -1,5 +1,10 @@
 # Szkolenie - C++20 #
 
+## Materiały do szkolenia
+
+* [Podręcznik](https://cpp-20.infotraining.pl/)
+* [Slajdy](https://infotraining.bitbucket.io/cpp-20/)
+
 ## Konfiguracja środowiska
 
 Proszę wybrać jedną z poniższych opcji:
