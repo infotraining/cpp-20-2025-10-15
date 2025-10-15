@@ -66,7 +66,7 @@ TEST_CASE("Gadget - write custom operator <=> - stronger category than auto dete
 
 TEST_CASE("SuperGadget - write custom operator <=> - member without compare-three-way operator")
 {
-    // CHECK(SuperGadget{{"ipad", 1.0}, Rating{1}} != SuperGadget{{"ipad", 1.0}, Rating{2}});
+    CHECK(SuperGadget{{"ipad", 1.0}, Rating{1}} != SuperGadget{{"ipad", 1.0}, Rating{2}});
     auto result = SuperGadget{{"ipad", 1.0}, Rating{1}} <=> SuperGadget{{"ipad", 1.0}, Rating{2}};
     CHECK(SuperGadget{{"ipad", 1.0}, Rating{1}} <=> SuperGadget{{"ipad", 1.0}, Rating{2}} == std::strong_ordering::less);
 }
@@ -78,7 +78,7 @@ enum class RatingValue : uint8_t { very_poor = 1,
     satisfactory,
     good,
     very_good,
-    excellent 
+    excellent
 };
 
 struct RatingStar
