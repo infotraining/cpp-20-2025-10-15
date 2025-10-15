@@ -16,16 +16,16 @@ struct Point
         return out << std::format("Point({},{})", p.x, p.y);
     }
 
-    bool operator==(const Point& other) const
-    {
-        return x == other.x && y == other.y;
-    }
+    bool operator==(const Point& other) const = default;
+    //friend bool operator==(const Point& lhs, const Point& rhs) = default;
 
-    bool operator!=(const Point& other) const
+    bool operator==(const std::pair<int, int>& other) const
     {
-        return !(*this == other);
+        return x == other.first && y == other.second;
     }
 };
+
+
 
 struct Point3D
 {
@@ -41,7 +41,12 @@ TEST_CASE("Point - operator ==")
         Point p3{2, 1};
 
         CHECK(p1 == p2);
-        CHECK(p1 != p3);
+        CHECK(p1 != p3); // expression rewritten to: !(p1 == p2)
+
+        std::pair pt1{1, 2};
+        CHECK(p1 == pt1);
+
+        CHECK(pt1 == p1); // expression rewritten to: p1 == pt1
     }
 
     // SECTION("Point3D")
