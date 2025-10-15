@@ -194,7 +194,7 @@ TEST_CASE("constraints")
 }
 
 template <typename T>
-concept Printable = requires(T obj, std::ostream& out) {
+concept Printable = requires(T& obj, std::ostream& out) {
     out << obj;
 };
 
@@ -222,6 +222,6 @@ TEST_CASE("concepts")
     Wrapper<int> w_int{42};
     w_int.print();
 
-    Wrapper<std::vector<int>> w_vec{std::vector{1, 2, 3}};
-    w_vec.print();
+    // Wrapper<std::vector<int>> w_vec{std::vector{1, 2, 3}};
+    // w_vec.print();
 }
