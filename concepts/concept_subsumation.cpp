@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <deque>
+#include <list>
 
 using namespace std::literals;
 
@@ -44,6 +46,7 @@ struct ColorRect : Rect
 
     void set_color(Color new_color)
     {
+        std::cout << "Setting new color\n";
         color = new_color;
     }
 };
@@ -58,6 +61,11 @@ concept Shape = requires(const T& obj)
 // clang-format on
 
 // TODO: Add concept ShapeWithColor that subsumes Shape and requires getters/setters for color
+template <typename T>
+concept ColorShape = Shape<T> && requires(T obj, Color color) {
+    { obj.get_color() } -> std::same_as<Color>;
+    obj.set_color(color);
+};
 
 static_assert(Shape<Rect>);
 static_assert(Shape<ColorRect>);
@@ -69,7 +77,30 @@ void render(T& shp)
     shp.draw();
 }
 
-// TODO: Add render function that accepts ShapeWithColor
+template <ColorShape T>
+void render(T& shp)
+{
+    shp.set_color(Color{0, 0, 0});
+    shp.draw();
+}
+
+template <std::bidirectional_iterator It>
+void my_algorithm(It start, It end)
+{
+    std::cout << "algorithm for BidiIt\n";
+}
+
+template <std::random_access_iterator It>
+void my_algorithm(It start, It end)
+{
+    std::cout << "algorithm for RandIt\n";
+}
+
+template <std::contiguous_iterator It>
+void my_algorithm(It start, It end)
+{
+    std::cout << "algorithm for ContigIt\n";
+}
 
 TEST_CASE("concept subsumation")
 {
@@ -77,5 +108,14 @@ TEST_CASE("concept subsumation")
     ColorRect cr{10, 20, {0, 255, 0}};
 
     render(r);
+    std::cout << "---------\n";
     render(cr);
+
+    std::list<int> lst;
+    std::deque<int> dq;
+    std::vector<int> vec;
+
+    my_algorithm(lst.begin(), lst.end());
+    my_algorithm(dq.begin(), dq.end());
+    my_algorithm(vec.begin(), vec.end());
 }

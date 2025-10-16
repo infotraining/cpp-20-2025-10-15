@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <set>
 
 using namespace std::literals;
 
@@ -160,16 +161,15 @@ inline namespace ver_3
 
     namespace Alternative
     {
-        auto max_value(Pointer auto a, Pointer auto b) 
-            requires std::same_as<decltype(a), decltype(b)> 
+        auto max_value(Pointer auto a, Pointer auto b)
+            requires std::same_as<decltype(a), decltype(b)>
         {
             assert(a != nullptr);
             assert(b != nullptr);
             return *a < *b ? *b : *a;
         }
-    }
+    } // namespace Alternative
 } // namespace ver_3
-
 
 std::integral auto add(std::integral auto a, std::integral auto b)
 {
@@ -198,17 +198,29 @@ concept Printable = requires(T& obj, std::ostream& out) {
     out << obj;
 };
 
+// template <typename T>
+// concept Range = requires(T& rng)
+// {
+//     std::begin(rng);
+//     std::end(rng);
+// };
+
+template <typename T>
+concept PrintableRange = std::ranges::range<T> && Printable<std::ranges::range_value_t<T>>;
+
 template <typename T>
 struct Wrapper
 {
     T value;
 
-    void print() const requires Printable<T>
+    void print() const
+        requires Printable<T>
     {
         std::cout << "value: " << value << "\n";
     }
 
     void print() const
+        requires PrintableRange<T>
     {
         std::cout << "values: [ ";
         for (const auto& item : value)
@@ -222,6 +234,50 @@ TEST_CASE("concepts")
     Wrapper<int> w_int{42};
     w_int.print();
 
-    // Wrapper<std::vector<int>> w_vec{std::vector{1, 2, 3}};
-    // w_vec.print();
+    Wrapper<std::vector<int>> w_vec{std::vector{1, 2, 3}};
+    w_vec.print();
+}
+
+template <typename T>
+concept LeanPointer = requires(T ptr) {
+    *ptr;
+    ptr == nullptr;
+    ptr != nullptr;
+    requires sizeof(T) == sizeof(void*);
+};
+
+namespace Alternative
+{
+    template <typename T>
+    concept LeanPointer = Pointer<T> && (sizeof(T) == sizeof(void*));
+} // namespace Alternative
+
+
+template<typename T>
+concept ContainerLike = requires {
+    typename T::value_type;
+    typename T::iterator;
+    typename T::const_iterator;
+};
+
+template <typename T>
+concept Hashable = requires(T&& obj) {
+    { std::hash<T>{}(obj) } -> std::convertible_to<size_t>;
+};
+
+template <typename T>
+concept WithoutPushBack = !requires(T& container, std::ranges::range_value_t<T>& item) { 
+    container.push_back(item); 
+}; 
+
+TEST_CASE("requires expression")
+{
+    static_assert(LeanPointer<int*>);
+    static_assert(not LeanPointer<std::shared_ptr<int>>);
+
+    static_assert(ContainerLike<std::vector<int>>);
+    static_assert(not ContainerLike<int[10]>);
+
+    static_assert(not WithoutPushBack<std::vector<int>>);
+    static_assert(WithoutPushBack<std::set<int>>);
 }
