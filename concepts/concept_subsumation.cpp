@@ -149,6 +149,19 @@ void for_all(F func, TRng&... rngs)
     (..., iterate_over(rngs)); // fold-expression
 }
 
+// todo: is it correct?
+// template <typename F, std::ranges::range... TRng>
+// auto for_all_2(F func, TRng&... rngs) -> void
+//     requires((... && std::is_same_v<std::ranges::range_value_t<TRng>, std::ranges::range_value_t<decltype(std::get<0>(std::tie(rngs...)))>>))
+// {
+//     auto iterate_over = [func = std::move(func)](auto& rng) {
+//         for (auto&& item : rng)
+//             func(item);
+//     };
+//
+//     (..., iterate_over(rngs));
+// }
+
 TEST_CASE("for_all")
 {
     std::vector<int> vec = {1, 2, 3};
