@@ -175,7 +175,8 @@ TEST_CASE("views")
         
         //auto keys = vec | std::views::elements<0>;
         auto keys = vec | std::views::keys;
-        auto values = vec | std::views::elements<1>;
+        //auto values = vec | std::views::elements<1>;
+        auto values = vec | std::views::keys;
 
         helpers::print(keys, "keys");
         helpers::print(values, "values");
