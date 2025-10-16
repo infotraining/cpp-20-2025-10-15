@@ -119,3 +119,47 @@ TEST_CASE("concept subsumation")
     my_algorithm(dq.begin(), dq.end());
     my_algorithm(vec.begin(), vec.end());
 }
+
+template <typename T>
+concept Printable = requires(T& obj, std::ostream& out) {
+    out << obj;
+};
+
+template <typename... TArgs>
+auto sum(TArgs... args) // sum(1, 2, 3, 4)
+{
+    return (... + args); // (((1 + 2) + 3) + 4)
+}
+
+template <typename THead, typename... TTail>
+constexpr bool AllSameAs_v = (... && std::is_same_v<THead, TTail>);
+
+static_assert(AllSameAs_v<int, int, int>);
+static_assert(not AllSameAs_v<int, int, char>);
+
+template <typename F, std::ranges::range... TRng>
+    requires AllSameAs_v<std::ranges::range_value_t<TRng>...> 
+void for_all(F func, TRng&... rngs)
+{
+    auto iterate_over = [func = std::move(func)](auto& rng) {
+        for(auto&& item : rng)
+            func(item);
+    };
+
+    (..., iterate_over(rngs)); // fold-expression
+}
+
+TEST_CASE("for_all")
+{
+    std::vector<int> vec = {1, 2, 3};
+    std::deque<int> dq = {4, 5, 6};
+    std::list<int> lst = {7, 8, 9};
+    int tab[3] = {10, 11, 12};
+
+
+    auto printer = [](Printable auto item) {
+        std::cout << "Item: " << item << "\n";
+    };
+
+    for_all(printer, vec, dq, lst, tab);
+}

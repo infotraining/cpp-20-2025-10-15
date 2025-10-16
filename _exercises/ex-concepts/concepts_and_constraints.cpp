@@ -231,7 +231,6 @@ TEST_CASE("container concepts")
 
 /////////////////////////////////////////////////////////////////////////////////////
 // TODO: add constraints to the algorithm
-
 template <std::ranges::range TRng>
     requires std::default_initializable<std::ranges::range_value_t<TRng>>
 void zero(TRng& rng) {
