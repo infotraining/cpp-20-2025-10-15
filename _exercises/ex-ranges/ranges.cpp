@@ -66,7 +66,8 @@ TEST_CASE("Exercise - ranges")
 
     helpers::print(lines, "lines");
 
-    auto result = lines
+        auto result
+        = lines
         | std::views::drop_while([](auto s) { return s.starts_with('#'); })
         | std::views::filter([](auto s) { return s != "\n"s; })
         | std::views::transform([](auto s) { return split(s); }) // std::pair<std::string_view, std::string_view>
