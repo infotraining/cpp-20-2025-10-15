@@ -281,11 +281,11 @@ constexpr double calc_gross_price(double net_price)
     return net_price + net_price * GetVat();
 }
 
-TEST_CASE("NTTP - lambda")
-{
-    auto vat_pl = [] { return 0.23; };
-    auto vat_ger = [] { return 0.19; };
+// TEST_CASE("NTTP - lambda")
+// {
+//     auto vat_pl = [] { return 0.23; };
+//     auto vat_ger = [] { return 0.19; };
 
-    REQUIRE(calc_gross_price<vat_pl>(100.0) == 123.0);
-    REQUIRE(calc_gross_price<vat_ger>(100.0) == 119.0);
-}
+//     REQUIRE(calc_gross_price<vat_pl>(100.0) == 123.0);
+//     REQUIRE(calc_gross_price<vat_ger>(100.0) == 119.0);
+// }

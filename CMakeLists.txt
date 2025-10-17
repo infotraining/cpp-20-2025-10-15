@@ -46,6 +46,7 @@ add_subdirectory(compare)
 add_subdirectory(stdlib-features)
 add_subdirectory(core-features)
 add_subdirectory(templates)
+add_subdirectory(coroutines-stdexec)
 # add_subdirectory(modules)
 
 # Exercises
