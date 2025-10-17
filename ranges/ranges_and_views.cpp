@@ -1,10 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
+#include <deque>
 #include <helpers.hpp>
 #include <iostream>
 #include <ranges>
 #include <string>
 #include <vector>
-#include <deque>
 
 using namespace std::literals;
 
@@ -72,7 +72,7 @@ namespace Check
             return it == end_ || *it == value_;
         }
     };
-}
+} // namespace Check
 
 template <auto Value>
 struct EndValue
@@ -95,7 +95,7 @@ TEST_CASE("sentinels", "[ranges]")
     std::ranges::sort(data.begin(), EndValue<42>{});
     helpers::print(data, "data");
 
-    char txt[] = { 'a', 'b', 'c', '\0', 'e', 'f' };
+    char txt[] = {'a', 'b', 'c', '\0', 'e', 'f'};
     std::ranges::sort(std::ranges::begin(txt), EndValue<'\0'>{}, std::greater{});
     helpers::print(txt, "txt");
 }
@@ -118,9 +118,9 @@ TEST_CASE("views")
         std::ranges::sort(head, std::greater{});
         helpers::print(data, "data");
 
-        for(auto& item : head)
+        for (auto& item : head)
             item = 0;
-        
+
         head[0] = 665;
         helpers::print(data, "data");
     }
@@ -147,23 +147,21 @@ TEST_CASE("views")
     SECTION("pipes |")
     {
         auto numbers_by_compostion = std::views::take(std::views::iota(1), 10);
-        
-        
-        auto numbers = 
-            std::views::iota(1) 
-            | std::views::drop(10) 
+
+        auto numbers = std::views::iota(1)
+            | std::views::drop(10)
             | std::views::filter([](int n) { return n % 2 == 0; })
             | std::views::transform([](int n) { return n * n; })
             | std::views::take(10)
             | std::views::reverse;
 
-        for(const auto& item : numbers)
+        for (const auto& item : numbers)
         {
             std::cout << item << "; ";
         }
         std::cout << "\n";
 
-        for(auto it = numbers.begin(); it != numbers.end(); ++it)
+        for (auto it = numbers.begin(); it != numbers.end(); ++it)
         {
             const auto& item = *it;
         }
@@ -171,11 +169,11 @@ TEST_CASE("views")
 
     SECTION("tuples & pairs")
     {
-        std::vector<std::tuple<std::string, double>> vec = { {"pi", 3.14}, {"e", 2.71} };
-        
-        //auto keys = vec | std::views::elements<0>;
+        std::vector<std::tuple<std::string, double>> vec = {{"pi", 3.14}, {"e", 2.71}};
+
+        // auto keys = vec | std::views::elements<0>;
         auto keys = vec | std::views::keys;
-        //auto values = vec | std::views::elements<1>;
+        // auto values = vec | std::views::elements<1>;
         auto values = vec | std::views::keys;
 
         helpers::print(keys, "keys");
@@ -187,9 +185,8 @@ TEST_CASE("split")
 {
     std::string text = "abc def ghi";
 
-    auto tokens_view = 
-        std::views::split(text, " ") 
-            | std::views::transform([](auto token) { return std::string_view(token.data(), token.size()); });
+    auto tokens_view = std::views::split(text, " ")
+        | std::views::transform([](auto token) { return std::string_view(token.data(), token.size()); });
 
     helpers::print(tokens_view, "tokens");
 }
@@ -201,7 +198,95 @@ TEST_CASE("views - reference semantics")
     auto evens_view = data | std::views::filter([](int i) { return i % 2 == 0; });
     helpers::print(data, "data");
 
-    // TODO - set all even numbers to 0 using evens_view
+    for (auto& item : evens_view)
+    {
+        item = 0;
+    }
 
     helpers::print(data, "data");
+}
+
+TEST_CASE("storing to container")
+{
+    std::vector data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+    SECTION("C++20")
+    {
+        auto evens_view = data
+            | std::views::filter([](int i) { return i % 2 == 0; })
+            | std::views::take(3)
+            | std::views::common;
+
+        std::vector<int> evens(evens_view.begin(), evens_view.end());
+
+        CHECK(evens == std::vector{2, 4, 6});
+    }
+
+    SECTION("C++23")
+    {
+        auto evens = data
+            | std::views::filter([](int i) { return i % 2 == 0; })
+            | std::views::take(3)
+            | std::ranges::to<std::vector>();
+
+        helpers::print(evens, "evens");
+
+        auto odds = data | std::views::filter([](int i) { return i % 2 != 0; });
+
+        std::vector vec_odds(std::from_range, odds); // constructs from range
+        helpers::print(vec_odds, "vec_odds");
+    }
+}
+
+TEST_CASE("range-based for")
+{
+    for (const int n : std::views::iota(1) | std::views::take(10))
+    {
+        std::cout << n << " ";
+    }
+}
+
+TEST_CASE("C++23 - new adaptors")
+{
+    std::vector words_en = {"zero", "one", "two"};
+    std::vector words_pl = {"zero", "jeden", "dwa"};
+
+    for (const auto& [index, value] : words_en | std::views::enumerate)
+    {
+        std::cout << index << " = " << value << "\n";
+    }
+
+    std::cout << "\n";
+
+    for (const auto& [en, pl] : std::views::zip(words_en, words_pl))
+    {
+        std::cout << en << " - " << pl << "\n";
+    }
+}
+
+template <std::ranges::range TRng>
+void print_container(TRng&& container)
+{
+    for(const auto& item : container)
+        std::cout << item << " ";
+    std::cout << "\n";
+}
+
+// template <std::ranges::view TView>
+// void print_container(TView vw)
+// {
+//     for(const auto& item : vw)
+//         std::cout << item << " ";
+//     std::cout << "\n";
+// }
+
+TEST_CASE("")
+{
+    std::vector<int> vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    print_container(vec);
+
+    auto evens = vec | std::views::filter([](int i) { return i % 2 == 0; });
+    print_container(evens);
+
+    print_container(vec | std::views::take(5));
 }
