@@ -192,3 +192,100 @@ TEST_CASE("capturing variadic pack")
     auto f = create_caller(sum_of_three, 1, 2, 3);
     CHECK(f() == 6);
 }
+
+//////////////////////////////////////////////////////////
+// NTTP
+
+template <double Factor, typename T>
+auto scale(T x)
+{
+    return Factor * x;
+}
+
+TEST_CASE("NTTP - double")
+{
+    REQUIRE(scale<2.0>(8) == 16.0);
+}
+
+struct Tax
+{
+    double value;
+
+    constexpr Tax(double v)
+        : value{v}
+    { }
+
+    double get_value() const
+    {
+        return value;
+    }
+};
+
+template <Tax Vat>
+constexpr auto calc_gross_price(double net_price)
+{
+    return net_price + net_price * Vat.get_value();
+}
+
+TEST_CASE("NTTP - structural types")
+{
+    constexpr Tax vat_pl{0.23};
+    constexpr Tax vat_ger{0.19};
+
+    CHECK(calc_gross_price<vat_pl>(100.0) == 123.0);
+    CHECK(calc_gross_price<vat_ger>(100.0) == 119.0);
+}
+
+template <size_t N>
+struct StaticString
+{
+    char text[N];
+
+    constexpr StaticString(const char (&str)[N]) noexcept
+    {
+        std::copy(str, str + N, text);
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const StaticString& str)
+    {
+        out << str.text;
+
+        return out;
+    }
+
+    auto operator<=>(const StaticString& other) const = default;
+};
+
+template <StaticString LogName>
+class Logger
+{
+public:
+    void log(std::string_view msg)
+    {
+        std::cout << LogName << ": " << msg << "\n";
+    }
+};
+
+TEST_CASE("NTTP - string")
+{
+    Logger<"main_logger"> logger_1;
+    Logger<"debug_logger"> logger_2;
+
+    logger_1.log("Hello");
+    logger_2.log("World");
+}
+
+template <std::invocable auto GetVat>
+constexpr double calc_gross_price(double net_price)
+{
+    return net_price + net_price * GetVat();
+}
+
+TEST_CASE("NTTP - lambda")
+{
+    auto vat_pl = [] { return 0.23; };
+    auto vat_ger = [] { return 0.19; };
+
+    REQUIRE(calc_gross_price<vat_pl>(100.0) == 123.0);
+    REQUIRE(calc_gross_price<vat_ger>(100.0) == 119.0);
+}
