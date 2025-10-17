@@ -214,8 +214,8 @@ TEST_CASE("storing to container")
     {
         auto evens_view = data
             | std::views::filter([](int i) { return i % 2 == 0; })
-            | std::views::take(3)
-            | std::views::common;
+                        | std::views::take(3)
+                                    | std::views::common;
 
         std::vector<int> evens(evens_view.begin(), evens_view.end());
 

@@ -1,13 +1,13 @@
-#include <iostream>
-#include <vector>
-#include <string>
-#include <map>
-#include <unordered_map>
-#include <set>
-#include <list>
-#include <source_location>
-#include <ranges>
 #include <helpers.hpp>
+#include <iostream>
+#include <list>
+#include <map>
+#include <ranges>
+#include <set>
+#include <source_location>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 template <typename T1, typename T2>
 std::ostream& operator<<(std::ostream& out, const std::pair<T1, T2>& p)
@@ -50,7 +50,7 @@ TEST_CASE("split")
 
 TEST_CASE("Exercise - ranges")
 {
-    const std::vector<std::string_view> lines = { 
+    const std::vector<std::string_view> lines = {
         "# Comment 1", /* comments can be only at the begining of a file */
         "# Comment 2",
         "# Comment 3",
@@ -62,16 +62,19 @@ TEST_CASE("Exercise - ranges")
         "5/five",
         "\n",
         "\n",
-        "6/six"
-    };
+        "6/six"};
 
     helpers::print(lines, "lines");
 
-    auto result = lines;
+    auto result = lines
+        | std::views::drop_while([](auto s) { return s.starts_with('#'); })
+        | std::views::filter([](auto s) { return s != "\n"s; })
+        | std::views::transform([](auto s) { return split(s); }) // std::pair<std::string_view, std::string_view>
+        | std::views::elements<1>;
 
     helpers::print(result, "result");
 
     auto expected_result = {"one"s, "two"s, "three"s, "four"s, "five"s, "six"s};
 
-    //CHECK(std::ranges::equal(result, expected_result));
+    CHECK(std::ranges::equal(result, expected_result));
 }
