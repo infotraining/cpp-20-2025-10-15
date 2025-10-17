@@ -6,6 +6,7 @@
 #include <string_view>
 #include <vector>
 #include <numbers>
+#include <format>
 
 using namespace std::literals;
 
@@ -115,3 +116,113 @@ TEST_CASE("float as span of bytes")
     writeble_bytes[3] |= std::byte{0b1000'0000};
     print_as_bytes(data[0], const_bytes);
 }
+
+//////////////////////////////////////
+// formatting with std::format
+
+TEST_CASE("format")
+{
+    std::string text = "Text";
+    std::string formatted_str = std::format("{} has {} chars", text, text.size());
+    std::cout << formatted_str << "\n";
+
+    std::cout << std::format("Price:{:_>8.2f} PLN\n", 665.9);
+}
+
+TEST_CASE("format specifiers")
+{
+    SECTION("width & fill character")
+    {
+        // width & alignment
+        CHECK(std::format("{:8}", 42) == "      42"sv);
+        CHECK(std::format("{:<8}", 42) == "42      "sv);
+        CHECK(std::format("{:8}", "text") == "text    "sv);
+        CHECK(std::format("{:^8}", "text") == "  text  "sv);
+        CHECK(std::format("{:>8}", "text") == "    text"sv);
+
+        // padding zeros
+        CHECK(std::format("{:08}", 42) == "00000042"sv);  // padding zeros
+        CHECK(std::format("{:^08}", 42) == "   42   "sv); // padding zeros ignored when alignment is specified
+        CHECK(std::format("{:>08}", -42) == "     -42"sv);
+
+        // fill character
+        CHECK(std::format("{:0<8}", 42) == "42000000"sv);
+        CHECK(std::format("{:0^8}", 42) == "00042000"sv);
+        CHECK(std::format("{:0>8}", 42) == "00000042"sv);
+    }
+
+    SECTION("precision for floating-points")
+    {
+        CHECK(std::format("{}", 0.12345678) == "0.12345678"sv); // default precision: 6
+        CHECK(std::format("{:.5}", 0.12345678) == "0.12346"sv);
+        CHECK(std::format("{:10.5}", 0.12345678) == "   0.12346"sv);
+        CHECK(std::format("{:_^10.5}", 0.12345678) == "_0.12346__"sv);
+    }
+
+    SECTION("precision for strings")
+    {
+        CHECK(std::format("{}", "helloworld") == "helloworld"sv);
+        CHECK(std::format("{:15}", "helloworld") == "helloworld     "sv);
+        CHECK(std::format("{:.5}", "helloworld") == "hello"sv);
+        CHECK(std::format("{:15.5}", "helloworld") == "hello          "sv);
+    }
+}
+
+TEST_CASE("formatting to buffers")
+{
+    std::string txt = "Hello";
+
+    SECTION("add null at the end")
+    {
+        char buffer[128];
+
+        auto result = std::format_to_n(buffer, std::size(buffer) - 1, "String '{}' has {} chars\n", txt, txt.size());
+        *(result.out) = '\0'; // add null at the end
+
+        std::cout << buffer;
+    }
+
+    SECTION("use array that is zeroed")
+    {
+        std::array<char, 128> buffer{};
+
+        auto result = std::format_to_n(buffer.data(), buffer.size() - 1, "String '{}' has {} chars\n", txt, txt.size());
+
+        std::cout << buffer.data();
+    }
+}
+
+TEST_CASE("std::format_to - unlimited number of chars")
+{
+    SECTION("works with streams")
+    {
+        std::format_to(std::ostreambuf_iterator<char>{std::cout}, "{} has value {}\n", "Pi", std::numbers::pi);
+    }
+
+    SECTION("works with back inserters")
+    {
+        std::string str;
+        std::format_to(std::back_inserter(str), "{} has value {}\n", "Pi", std::numbers::pi);
+
+        std::cout << str;
+    }
+}
+
+TEST_CASE("format string must be compile-time value")
+{
+    SECTION("for std::format")
+    {
+        const char* fmt1 = "{}\n"; // runtime format string
+        // std::cout << std::format(fmt1, 42); // compile-time ERROR: runtime format
+
+        constexpr const char* fmt2 = "{}\n"; // compile-time format string
+        std::cout << std::format(fmt2, 42);  // OK
+    }
+
+    SECTION("runtime version - std::vformat")
+    {
+        const char* fmt = "{} value is {:7.2f}\n";
+        std::cout << std::vformat(fmt, std::make_format_args("Pi", std::numbers::pi));
+    }
+}
+
